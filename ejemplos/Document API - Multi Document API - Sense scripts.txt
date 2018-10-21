@@ -1,0 +1,89 @@
+Document API
+El Bulk API
+
+# Borramos el índice `indice` por si acaso existe de algún ejercicio anterior
+DELETE /indice
+
+# Creamos ahora un índice sencillito, con un único shard
+PUT /indice
+{ "settings": { "number_of_shards": 1 }}
+
+# Y agregamos unos cuantos documentos haciendo uso de la interfaz bulk
+PUT /indice/tipo/_bulk
+{"index":{"_id":1}}
+{"DocID":"ABCD-A-1234-JZ3", "precio":10, "marca":"mi marca primera"}
+{"index":{"_id":2}}
+{"DocID":"ABCD-A-1234-LZ5", "precio":20, "marca":"mi marca privilegiada"}
+{"index":{"_id":3}}
+{"DocID":"ABDC-B-5678-LP5", "precio":30, "marca":"mi marca pringada"}
+{"index":{"_id":4}}
+{"DocID":"ABDC-B-5678-LP5", "precio":20, "marca":"mi marca prima"}
+{"index":{"_id":5}}
+{"DocID":"DCAB-C-4321-LP5", "precio":10, "marca":"mi marca primaria es mejor"}
+{"index":{"_id":6}}
+{"DocID":"DCAB-C-4321-LP5", "precio":20, "marca":"mi marca priorizada"}
+{"index":{"_id":7}}
+{"DocID":"DACB-D-8765-VT7", "precio":30, "marca":"mi marca previsora"}
+{"index":{"_id":8}}
+{"DocID":"DACB-D-8765-VT7", "precio":20, "marca":"mi marca precargada"}
+{"index":{"_id":9}}
+{"DocID":"DBAC-E-1111-DO8", "precio":50, "marca":"mi segunda marca primera"}
+{"index":{"_id":10}}
+{"DocID":"DBAC-E-1111-000", "precio":50, "marca":"mi segunda marca primera"}
+{ "delete" : { "_index" : "indice", "_type" : "tipo", "_id" : "10" } }
+
+# Multi Get API
+GET /_mget
+{
+    "docs" : [
+        {
+            "_index" : "indice",
+            "_type" : "tipo",
+            "_id" : "1"
+        },
+        {
+            "_index" : "indice",
+            "_type" : "tipo",
+            "_id" : "2"
+        }
+    ]
+}
+
+# Podemos hacer uso del mismo formato bajando a un índice
+GET /indice/_mget
+{
+    "docs" : [
+        {,
+            "_type" : "tipo",
+            "_id" : "1"
+        },
+        {
+            "_type" : "tipo",
+            "_id" : "2"
+        }
+    ]
+}
+
+# Y a un tipo
+
+GET /indice/tipo/_mget
+{
+    "ids" : ["1","2"]
+}
+
+# DELETE BY QUERY
+DELETE indice/tipo/_query?q=DocID:DBAC
+
+# Admite el borrado multi-tipos
+DELETE indice/tipo1, tipo2/_query?q=DocID:DBAC
+
+# Y multi-indice basado en tipos
+DELETE _all/tipo/_query?q=DocID:DBAC
+
+# Y borrados con payload DSL en la llamada
+DELETE indice/tipo/_query
+{
+    "query" : {
+        "term" : { "precio" : 10 }
+    }
+}

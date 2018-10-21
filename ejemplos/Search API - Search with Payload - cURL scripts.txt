@@ -1,0 +1,423 @@
+# SEARCH API
+# Agregamos unos cuantos documentos haciendo uso de la interfaz bulk
+curl -XDELETE "http://localhost:9200/indice"
+curl -XPUT "http://localhost:9200/indice/tipo/_bulk" -d'
+{"index":{"_id":1}}
+{"DocID":"ABCD-A-1234-JZ3", "tipo":1, "precio":10, "marca":"mi marca primera", "fecha":"2015-01-15T14:12:12"}
+{"index":{"_id":2}}
+{"DocID":"ABCD-A-1234-LZ5", "tipo":1, "precio":20, "marca":"mi marca privilegiada", "fecha":"2015-01-15T14:12:12"}
+{"index":{"_id":3}}
+{"DocID":"ABDC-B-5678-LP5", "tipo":1, "precio":30, "marca":"mi marca pringada", "fecha":"2015-01-15T14:12:12"}
+{"index":{"_id":4}}
+{"DocID":"ABDC-B-5678-LP5", "tipo":1, "precio":20, "marca":"mi marca prima", "fecha":"2015-01-16T14:12:12"}
+{"index":{"_id":5}}
+{"DocID":"DCAB-C-4321-LP5", "tipo":1, "precio":10, "marca":"mi marca primaria es mejor", "fecha":"2015-01-16T14:12:12"}
+{"index":{"_id":6}}
+{"DocID":"DCAB-C-4321-LP5", "tipo":1, "precio":20, "marca":"mi marca priorizada", "fecha":"2015-01-16T14:12:12"}
+{"index":{"_id":7}}
+{"DocID":"DACB-D-8765-VT7", "tipo":1, "precio":30, "marca":"mi marca previsora", "fecha":"2015-01-17T14:12:12"}
+{"index":{"_id":8}}
+{"DocID":"DACB-D-8765-VT7", "tipo":1, "precio":20, "marca":"mi marca precargada", "fecha":"2015-01-17T14:12:12"}
+{"index":{"_id":9}}
+{"DocID":"DBAC-E-1111-DO8", "tipo":1, "precio":50, "marca":"mi segunda marca primera", "fecha":"2015-01-17T14:12:12"}
+'
+
+curl -XPUT "http://localhost:9200/indice/tipo2/_bulk" -d'
+{"index":{"_id":1}}
+{"DocID":"ABCD-A-1234-JZ3", "tipo":2, "precio":10, "marca":"mi marca primera T2", "fecha":"2010-01-15T14:12:12"}
+{"index":{"_id":2}}
+{"DocID":"ABCD-A-1234-LZ5", "tipo":2, "precio":20, "marca":"mi marca privilegiada T2", "fecha":"2010-01-15T14:12:12"}
+{"index":{"_id":3}}
+{"DocID":"ABDC-B-5678-LP5", "tipo":2, "precio":30, "marca":"mi marca pringada T2", "fecha":"2010-01-15T14:12:12"}
+{"index":{"_id":4}}
+{"DocID":"ABDC-B-5678-LP5", "tipo":2, "precio":20, "marca":"mi marca prima T2", "fecha":"2010-01-16T14:12:12"}
+{"index":{"_id":5}}
+{"DocID":"DCAB-C-4321-LP5", "tipo":2, "precio":10, "marca":"mi marca primaria es mejor T2", "fecha":"2010-01-16T14:12:12"}
+{"index":{"_id":6}}
+{"DocID":"DCAB-C-4321-LP5", "tipo":2, "precio":20, "marca":"mi marca priorizada T2", "fecha":"2010-01-16T14:12:12"}
+{"index":{"_id":7}}
+{"DocID":"DACB-D-8765-VT7", "tipo":2, "precio":30, "marca":"mi marca previsora T2", "fecha":"2010-01-17T14:12:12"}
+{"index":{"_id":8}}
+{"DocID":"DACB-D-8765-VT7", "tipo":2, "precio":20, "marca":"mi marca precargada T2", "fecha":"2010-01-17T14:12:12"}
+{"index":{"_id":9}}
+{"DocID":"DBAC-E-1111-DO8", "tipo":2, "precio":50, "marca":"mi segunda marca primera T2", "fecha":"2010-01-17T14:12:12"}
+'
+
+
+Formato del Search API
+# básico
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query": {
+        "match_all":{}
+    }
+}'
+
+# con match 
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query": {
+        "match":{ "precio":20}
+    }
+}'
+
+# SELECT * FROM Indice.tipo WHERE Precio = 20
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "filtered": {
+      "query": {
+        "match_all": {}
+      },
+      "filter": {
+        "term": {
+          "precio": 20
+        }
+      }
+    }
+  }
+}'
+
+# Misma query menos texto
+# SELECT * FROM indice.tipo WHERE Precio = 20
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "filtered": {
+      "filter": {
+        "term": {
+          "precio": 20
+        }
+      }
+    }
+  }
+}'
+
+# SELECT * FROM indice.tipo WHERE precio = 20 OR precio = 30
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query" : {
+        "filtered" : {
+            "filter" : {
+                "terms" : { 
+                    "precio" : [20, 50]
+                }
+            }
+        }
+    }
+}'
+
+# SELECT * FROM indice.* WHERE precio = 20 OR precio = 30
+curl -XGET "http://localhost:9200/indice/_search" -d'
+{
+    "query" : {
+        "filtered" : {
+            "filter" : {
+                "terms" : { 
+                    "precio" : [20, 50]
+                }
+            }
+        }
+    }
+}'
+
+# FILTROS
+
+# WHERE ( 'precio' is 20 AND 'fecha' is not '2015-01-16T14:12:12' )
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query": {
+        "bool": {
+            "must":     { "match": { "precio": 20 }},
+            "must_not": { "match": { "fecha": "2015-01-16T14:12:12" }},
+            "should":   { "match_all": {}}
+        }
+    }
+}'
+
+# WHERE ( 
+#        ('precio' is 20)
+#        AND 
+#        ('fecha' is not '2015-01-16T14:12:12' ) 
+#        OR
+#        ('marca' is 'precargada')
+#       )
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query": {
+        "bool": {
+            "must":     { "match": { "precio": 20 }},
+            "must_not": { "match": { "fecha": "2015-01-16T14:12:12" }},
+            "should":   { "match": { "marca":"precargada" }}
+        }
+    }
+}'
+
+# WHERE (
+#        ('precio' is 10 OR 'DocID' is "ABCD-A-1234-JZ3") 
+#         AND 
+#        ('precio' is not 30)
+#       )
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "filtered": {
+      "filter": {
+        "bool": {
+          "should": [
+            {
+              "term": {
+                "precio": 10
+              }
+            },
+            {
+              "term": {
+                "DocID": "ABCD-A-1234-JZ3"
+              }
+            }
+          ],
+          "must_not": {
+            "term": {
+              "precio": 30
+            }
+          }
+        }
+      }
+    }
+  }
+}'
+
+# WHERE (   
+#        'DocID' IS "ABCD-A-1234-JZ3"
+#        OR
+#        (    
+#         'marca' IS "priorizada"
+#         AND
+#         'precio` IS 20
+#        )
+#       )
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "filtered": {
+      "filter": {
+        "bool": {
+          "should": [
+            {
+              "term": {
+                "DocID": "ABCD-A-1234-JZ3"
+              }
+            },
+            {
+              "bool": {
+                "must": [
+                  {
+                    "term": {
+                      "marca": "priorizada"
+                    }
+                  },
+                  {
+                    "term": {
+                      "precio": 20
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}'
+
+# RANGOS
+# WHERE 10 < 'precio' <= 30
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "filtered": {
+      "filter": {
+        "range": {
+          "precio": {
+            "gt": 10,
+            "lte": 30
+          }
+        }
+      }
+    }
+  }
+}'
+
+# Where 'precio' => 50
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "filtered": {
+      "filter": {
+        "range": {
+          "precio": {
+            "gte": 50
+          }
+        }
+      }
+    }
+  }
+}'
+
+# BOOSTING 
+# Documentos que tengan siempre marca en el campo marca, 
+#  que nunca contengan priorizada o pringada y que, en caso de contener 
+#  primera o privilegiada, esos resultados aparezcan entre los top de retorno
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query": {
+        "bool": {
+            "must": {
+                "match": {  
+                    "marca": {
+                        "query":"marca"
+                    }
+                }
+            },
+            "should": [
+                { "match": {
+                    "marca": {
+                        "query": "primera",
+                        "boost": 3 
+                    }
+                }},
+                { "match": {
+                    "marca": {
+                        "query": "privilegiada",
+                        "boost": 2 
+                    }
+                }}
+            ],
+            "must_not" : {
+                "match" : {
+                    "marca": {
+                        "query":"priorizada pringada",
+                        "operator":"or"
+                    }
+                }
+            }
+        }
+    }
+}'
+
+# CAMPOS QUE EXISTEN o NO
+curl -XDELETE "http://localhost:9200/indice"
+
+# Agregamos el nuevo bulk de datos. En este caso, 
+# no todos los documentos tienen el mismo número y tipo de campos
+curl -XPUT "http://localhost:9200/indice/tipo/_bulk" -d'
+{"index":{"_id":1}}
+{"DocID":"ABCD-A-1234-JZ3", "precio":10, "marca":"mi marca primera", "temporal":10}
+{"index":{"_id":2}}
+{"DocID":"ABCD-A-1234-LZ5", "precio":20, "marca":"mi marca privilegiada", "metadatos":"campo de prueba"}
+{"index":{"_id":3}}
+{"DocID":"ABDC-B-5678-LP5", "precio":30, "marca":"mi marca pringada"}
+{"index":{"_id":4}}
+{"DocID":"ABDC-B-5678-LP5", "precio":20, "marca":"mi marca prima"}
+{"index":{"_id":5}}
+{"DocID":"DCAB-C-4321-LP5", "precio":10, "marca":"mi marca primaria es mejor"}
+{"index":{"_id":6}}
+{"DocID":"DCAB-C-4321-LP5", "precio":20, "marca":"mi marca priorizada"}
+{"index":{"_id":7}}
+{"DocID":"DACB-D-8765-VT7", "precio":30, "marca":"mi marca previsora"}
+{"index":{"_id":8}}
+{"DocID":"DACB-D-8765-VT7", "precio":20, "marca":"mi marca precargada"}
+{"index":{"_id":9}}
+{"DocID":"DBAC-E-1111-DO8", "precio":50, "marca":"mi segunda marca primera"}
+'
+
+# Buscar documentos que contentan el campo "temporal"
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "filtered": {
+      "filter": {
+        "exists": {
+          "field": "temporal"
+        }
+      }
+    }
+  }
+}'
+
+# Buscar aquellos documentos que no contengan campo "metadatos"
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "filtered": {
+      "filter": {
+        "missing": {
+          "field": "metadatos"
+        }
+      }
+    }
+  }
+}'
+
+# PREFIX
+# WHERE DocID LIKE 'DA%' - da va en minúscula porque el analizador estándar hace un lowercase tokenizer
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "prefix": {
+      "DocID": "da"
+    }
+  }
+}'
+
+# WILDCARDS
+# WHERE DocID LIKE 'd[a-z].+' - da va en minúscula porque el analizador estándar hace un lowercase tokenizer
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+  "query": {
+    "regexp": {
+      "DocID": "d[a-z].+"
+    }
+  }
+}'	
+
+# ORDER
+# ORDER BY precio ASC
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query" : {
+        "match_all" : {}
+    },
+    "sort" : [
+        {"precio" : { "order" : "asc", "mode" : "min" }}
+    ]
+}'
+
+# FRASES
+curl -XPUT "http://localhost:9200/indice/tipo/_bulk" -d'
+{"index":{"_id":11}}
+{"DocID":"ABCD-A-1234-LZ5", "precio":20, "marca":"mi test marca privilegiada", "metadatos":"campo de prueba"}
+'
+
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query": {
+        "match_phrase": {
+            "marca": "mi marca"
+        }
+    }
+}'
+
+# Frase con slop
+curl -XGET "http://localhost:9200/indice/tipo/_search" -d'
+{
+    "query": {
+        "match_phrase": {
+            "marca": { 
+                "query": "mi marca",
+                "slop":1
+            }
+        }
+    }
+}'

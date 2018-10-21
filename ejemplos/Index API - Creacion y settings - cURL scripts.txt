@@ -1,0 +1,56 @@
+# Creación del índice de forma automática
+curl -XPOST "http://localhost:9200/newdefaultindex/helloworld/1/_create" -d'
+{ 
+    "message": "Hello World!" 
+}'
+
+# Creación del índice de forma manual
+curl -XPUT "http://localhost:9200/newcustomindex"
+
+# Borrado del índice
+curl -XDELETE "http://localhost:9200/newcustomindex"
+
+# Dos grandes opciones de configuración - 
+#   Settings
+#   Mappings
+curl -XPUT "http://localhost:9200/newcustomindex" -d'
+{
+    "settings" : {
+        "number_of_shards" : 1,
+		"number_of_replicas" : 2
+	},
+    "mappings" : {
+        "customtype" : {
+            "_source" : { "enabled" : false },
+            "properties" : {
+            "message" : { "type" : "string", "index" : "not_analyzed" }
+            }
+        }
+    }
+}'
+
+# Veamos que aspecto tiene ahora el índice creado
+curl -XGET "http://localhost:9200/newcustomindex"
+
+# Podemos seguir cambiando los settings del índice pero, una vez creado, necesitamos
+#  cerrarlo para hacer cualquier actualización
+curl -XPOST "http://localhost:9200/indice/_close"
+curl -XPUT "http://localhost:9200/indice/_settings" -d'
+{
+  "index": {
+    "analysis": {
+      "analyzer": {
+        "HTMLPlusSnowball": {
+         "type": "custom", 
+          "char_filter": [
+            "html_strip"
+          ], 
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase", 
+            "stop", 
+            "snowball"
+          ]  
+        }}}}}'
+curl -XPOST "http://localhost:9200/indice/_open"
+curl -XGET "http://localhost:9200/newcustomindex"

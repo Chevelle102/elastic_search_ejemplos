@@ -1,0 +1,96 @@
+# TOKEN FILTERs
+# LowerCase - filtro que modifica los tokens recibidos y los pasa a minúsculas
+curl -XGET "http://localhost:9200/_analyze?tokenizer=keyword&filters=lowercase&text=ESTO ES UNA PRUEBA"
+
+# Uppercase - filtro que modifica los tokens recibidos y los pasa a mayúsculas
+curl -XGET "http://localhost:9200/_analyze?tokenizer=keyword&filters=uppercase&text=esto es una prueba"
+
+# Lenght - limitar el mínimo y máximo para considerarse válido
+curl -XDELETE "http://localhost:9200/indice"
+curl -XPUT "http://localhost:9200/indice" -d'
+{
+    "settings" : {
+        "analysis" : {
+            "analyzer" : {
+                "default" : {
+                    "tokenizer" : "standard",
+                    "filter" : "mi_filtro"
+                }
+            },
+            "filter" : {
+                "mi_filtro" : {
+                    "type" : "length",
+                    "max" : 2
+                }
+            }
+        }
+    }
+}'
+curl -XGET "http://localhost:9200/indice/_analyze?pretty=1&text=ejemplo muy simple de test"
+
+# Stop words  - elimina las palabras 'stop' de la indexación final del documento  
+curl -XDELETE "http://localhost:9200/indice"
+curl -XPUT "http://localhost:9200/indice" -d'
+{
+    "settings" : {
+        "analysis" : {
+            "analyzer" : {
+                "default" : {
+                    "tokenizer" : "standard",
+                    "filter" : "mi_filtro"
+                }
+            },
+            "filter" : {
+                "mi_filtro" : {
+                    "type" : "stop",
+                    "stopwords": ["el", "de", "a"]
+                }
+            }
+        }
+    }
+}'
+curl -XGET "http://localhost:9200/indice/_analyze?pretty=1&text=el ejemplo de test a tope"
+  
+# Word delimiter - eliminar delimitadores de palabras/numeros del texto
+curl -XDELETE "http://localhost:9200/indice"
+curl -XPUT "http://localhost:9200/indice" -d'
+{
+    "settings" : {
+        "analysis" : {
+            "analyzer" : {
+                "default" : {
+                    "tokenizer" : "standard",
+                    "filter" : "mi_filtro"
+                }
+            },
+            "filter" : {
+                "mi_filtro" : {
+                    "type" : "word_delimiter"
+                }
+            }
+        }
+    }
+}'
+curl -XGET "http://localhost:9200/indice/_analyze?pretty=1&text=test--para,ver/funciona"
+
+
+# ANALIZADORES POR DEFECTO
+# Simple Analyzer - Whitespaces Tokenizer + Lowercase
+curl -XGET "http://localhost:9200/_analyze?text=OTRO test&analyzer=simple"
+
+# Standard Analyzer -Standard Tokenizer + Standard Token Filter + Lower Case Token Filter + Stop Token Filter.
+curl -XDELETE "http://localhost:9200/indice"
+curl -XPUT "http://localhost:9200/indice" -d'
+{
+    "settings" : {
+        "analysis" : {
+            "analyzer" : {
+                "default" : {
+                    "type" : "standard", 
+                    "stopwords": [ "test", "para" ]
+                }
+            }
+        }
+    }
+}'
+curl -XGET "http://localhost:9200/indice/_analyze?pretty=1&text=test--para,ver-/funciona"

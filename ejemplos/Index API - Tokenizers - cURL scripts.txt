@@ -1,0 +1,47 @@
+# TOKENIZERs
+# Letter tokenizer - divide la cadena quedándose únicamente con las letras.
+curl -XGET "http://localhost:9200/_analyze?tokenizer=letter&text=esto123213es<<<>>una$·prueba"
+
+# Lowercase tokenizer - letter tokenizer que transforma el texto a lowercase.
+curl -XGET "http://localhost:9200/_analyze?tokenizer=lowercase&text=ESTO123213ES<<<>>una$·prueba"
+
+# Whitespace tokenizer - genera tokens de texto separado por espacios en blanco.
+curl -XGET "http://localhost:9200/_analyze?tokenizer=whitespace&text=esto es una prueba"
+
+# Path_hierarchy - muy útil para tokenizar cadenas de tipo path
+curl -XGET "http://localhost:9200/_analyze?tokenizer=uax_url_email" -d'
+{
+    hey, check out http://edge.org/conversation/yuval_noah_harari-daniel_kahneman-death-is-optional for some light reading.
+}'
+
+curl -XGET "http://localhost:9200/_analyze?tokenizer=uax_url_email" -d'
+{
+    luis.polanco@gmail.com, torpedo, juan.alvarez@hotmail.com
+}'
+
+# nGram - trocea el contenido en bloques de min_gram y max_gram
+curl -XDELETE "http://localhost:9200/indice"
+curl -XPUT "http://localhost:9200/indice" -d'
+{
+    "settings": {
+        "analysis": {
+            "analyzer": {
+                "un_ngram_tokenizer_cualquiera": {
+                    "tokenizer": "un_ngram_tokenizer_cualquiera"
+                }
+            },
+            "tokenizer": {
+                "un_ngram_tokenizer_cualquiera": {
+                    "type": "nGram",
+                    "min_gram": "3",
+                    "max_gram": "4",
+                    "token_chars": [
+                        "letter",
+                        "digit"
+                    ]
+                }
+            }
+        }
+    }
+}'
+curl -XGET "http://localhost:9200/indice/_analyze?pretty=1&analyzer=un_ngram_tokenizer_cualquiera&text=simple"

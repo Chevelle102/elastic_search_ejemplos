@@ -1,0 +1,44 @@
+# ¿Cómo podemos asociar un mapping a un índice?
+#  Opcion 1 - Durante el proceso de creación del índice - 
+DELETE indexname
+POST indexname 
+{
+    "settings" : {},
+    "mappings" : {
+		"mappingName" : {
+			"properties" : {
+				"message" : {"type" : "string", "store" : true }
+			}
+		}
+	}
+}
+GET indexname
+	
+Opcion 2 - Creando mapping templates mediante el Mapping API -
+PUT indexname2
+PUT indexname2/_mapping/mappingName
+{
+    "mappingName" : {
+		"properties" : {
+			"message":{
+				"type" : "string", "store" : true
+			}
+		}
+	}
+}
+
+	
+PUT index-name-a
+PUT index-name-b
+PUT index-name-a,index-name-b/_mapping/mappingName
+{
+    "mappingName" : {
+		"properties" : {
+			"message" : {
+				"type" : "string", 
+				"store" : true 
+			}
+		}
+	}
+}
+GET index-name-a/_mapping/mappingName

@@ -1,0 +1,89 @@
+Document API
+El Bulk API
+
+# Borramos el índice `indice` por si acaso existe de algún ejercicio anterior
+curl -XDELETE "http://localhost:9200/indice"
+
+# Creamos ahora un índice sencillito, con un único shard
+curl -XPUT "http://localhost:9200/indice" -d'
+{ "settings": { "number_of_shards": 1 }}'
+
+# Y agregamos unos cuantos documentos haciendo uso de la interfaz bulk
+curl -XPUT "http://localhost:9200/indice/tipo/_bulk" -d'
+{"index":{"_id":1}}
+{"DocID":"ABCD-A-1234-JZ3", "precio":10, "marca":"mi marca primera"}
+{"index":{"_id":2}}
+{"DocID":"ABCD-A-1234-LZ5", "precio":20, "marca":"mi marca privilegiada"}
+{"index":{"_id":3}}
+{"DocID":"ABDC-B-5678-LP5", "precio":30, "marca":"mi marca pringada"}
+{"index":{"_id":4}}
+{"DocID":"ABDC-B-5678-LP5", "precio":20, "marca":"mi marca prima"}
+{"index":{"_id":5}}
+{"DocID":"DCAB-C-4321-LP5", "precio":10, "marca":"mi marca primaria es mejor"}
+{"index":{"_id":6}}
+{"DocID":"DCAB-C-4321-LP5", "precio":20, "marca":"mi marca priorizada"}
+{"index":{"_id":7}}
+{"DocID":"DACB-D-8765-VT7", "precio":30, "marca":"mi marca previsora"}
+{"index":{"_id":8}}
+{"DocID":"DACB-D-8765-VT7", "precio":20, "marca":"mi marca precargada"}
+{"index":{"_id":9}}
+{"DocID":"DBAC-E-1111-DO8", "precio":50, "marca":"mi segunda marca primera"}
+{"index":{"_id":10}}
+{"DocID":"DBAC-E-1111-000", "precio":50, "marca":"mi segunda marca primera"}
+{ "delete" : { "_index" : "indice", "_type" : "tipo", "_id" : "10" } }
+'
+# Multi Get API
+curl -XGET "http://localhost:9200/_mget" -d'
+{
+    "docs" : [
+        {
+            "_index" : "indice",
+            "_type" : "tipo",
+            "_id" : "1"
+        },
+        {
+            "_index" : "indice",
+            "_type" : "tipo",
+            "_id" : "2"
+        }
+    ]
+}'
+
+# Podemos hacer uso del mismo formato bajando a un índice
+curl -XGET "http://localhost:9200/indice/_mget" -d'
+{
+    "docs" : [
+        {,
+            "_type" : "tipo",
+            "_id" : "1"
+        },
+        {
+            "_type" : "tipo",
+            "_id" : "2"
+        }
+    ]
+}'
+
+# Y a un tipo
+
+curl -XGET "http://localhost:9200/indice/tipo/_mget" -d'
+{
+    "ids" : ["1","2"]
+}'
+
+# DELETE BY QUERY
+curl -XDELETE "http://localhost:9200/indice/tipo/_query?q=DocID:DBAC"
+
+# Admite el borrado multi-tipos
+curl -XDELETE "http://localhost:9200/indice/tipo1, tipo2/_query?q=DocID:DBAC"
+
+# Y multi-indice basado en tipos
+curl -XDELETE "http://localhost:9200/_all/tipo/_query?q=DocID:DBAC"
+
+# Y borrados con payload DSL en la llamada
+curl -XDELETE "http://localhost:9200/indice/tipo/_query" -d'
+{
+    "query" : {
+        "term" : { "precio" : 10 }
+    }
+}'

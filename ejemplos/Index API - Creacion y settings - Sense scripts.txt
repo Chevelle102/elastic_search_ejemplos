@@ -1,0 +1,56 @@
+# Creación del índice de forma automática
+POST newdefaultindex/helloworld/1/_create
+{ 
+    "message": "Hello World!" 
+}
+
+# Creación del índice de forma manual
+PUT newcustomindex
+
+# Borrado del índice
+DELETE newcustomindex
+
+# Dos grandes opciones de configuración - 
+#   Settings
+#   Mappings
+PUT newcustomindex
+{
+    "settings" : {
+    	"number_of_shards" : 1,
+		"number_of_replicas" : 2
+	},
+    "mappings" : {
+        "customtype" : {
+            "_source" : { "enabled" : false },
+            "properties" : {
+            "message" : { "type" : "string", "index" : "not_analyzed" }
+            }
+        }
+    }
+}
+
+# Veamos que aspecto tiene ahora el índice creado
+GET newcustomindex
+
+# Podemos seguir cambiando los settings del índice pero, una vez creado, necesitamos
+#  cerrarlo para hacer cualquier actualización
+POST indice/_close
+PUT /indice/_settings
+{
+  "index": {
+    "analysis": {
+      "analyzer": {
+        "HTMLPlusSnowball": {
+         "type": "custom", 
+          "char_filter": [
+            "html_strip"
+          ], 
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase", 
+            "stop", 
+            "snowball"
+          ]  
+        }}}}}
+POST indice/_open
+GET newcustomindex

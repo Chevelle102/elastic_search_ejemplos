@@ -1,0 +1,46 @@
+# Borramos el índice para tenerlo limpio
+curl -XDELETE "http://localhost:9200/tutorial"
+
+
+# Agregamos un conjunto de documentos al índice para poder consultar
+curl -XPUT "http://localhost:9200/tutorial/helloworld/1" -d'
+{ "message": "Hello world!" }'
+curl -XPUT "http://localhost:9200/tutorial/helloworld/2" -d'
+{ "message": "Good bye, World!" }'
+curl -XPUT "http://localhost:9200/tutorial/helloworld/3" -d'
+{ "message": "Good afternoon, World!" }'
+curl -XPUT "http://localhost:9200/tutorial/helloworld/4" -d'
+{ "message": "Well done, World!" }'
+curl -XPUT "http://localhost:9200/tutorial/helloworld/5" -d'
+{ "message": "Hello universe!", "document":{"message":"back in the oldies!"}}'
+curl -XPUT "http://localhost:9200/tutorial/helloworld/6" -d'
+{ "message": "World and universe!", "document":{"message":"oldies will be there forever"}}'
+
+
+# Documentos que contengan back o done en el cuerpo del mensaje
+curl -XGET "http://localhost:9200/tutorial/helloworld/_search?q=document.message:(back OR done)"
+
+
+# Documentos que contengan back o done y message con un World en el contenido
+curl -XGET "http://localhost:9200/tutorial/helloworld/_search?q=document.message:(back OR oldies) AND message:World"
+
+
+# documentos que no tengan valor en el campo comments
+curl -XGET "http://localhost:9200/tutorial/helloworld/_search?q=_missing_:document"
+
+
+# documentos que tengan valor en el campo comments
+curl -XGET "http://localhost:9200/tutorial/helloworld/_search?q=_exists_:document"
+
+
+# Documentos que contengan algo parecido a "uninverse" en el campo message
+curl -XGET "http://localhost:9200/tutorial/helloworld/_search?q=message:uninverse~"
+
+
+# potencia en el resultado aquellos documentos que tengan bye
+curl -XGET "http://localhost:9200/tutorial/helloworld/_search?q=message:Good OR bye^2"
+curl -XGET "http://localhost:9200/tutorial/helloworld/_search?q=message:Good OR bye^200"
+
+
+# Términos que aparecen y términos que no deben aparecer
+curl -XGET "http://localhost:9200/tutorial/helloworld/_search?q=message:+Good -afternoon"

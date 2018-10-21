@@ -1,0 +1,119 @@
+# Borra todos los elementos bajo el índice tutorial
+DELETE tutorial
+
+# Agrega un nuevo documento al indice tutorial en el tipo helloworld
+PUT tutorial/helloworld/1
+{
+	"message": "Hello World!" 
+}
+
+# Error - PUT necesita de ID para poder agregar un documento
+# No handler found for uri [/tutorial/helloworld] and method [PUT]
+PUT tutorial/helloworld
+{
+	"datos":"dato"
+}
+# Petición correcta pero retornará error porque el documento con ID 1 existe y estamos forzando al _create
+PUT tutorials/helloworlds/1/_create
+{
+    "datos":"dato"
+
+}
+
+# Error - PUT no tiene un handler para _update, únicamente permite creates
+PUT tutorials/helloworlds/1/_update
+{
+    "dato2":"dato"
+}
+
+# Correcto - POST no proporciona ID pero ES lo generará de forma automática
+POST tutorial/helloworld
+{ 
+    "message": "Hello World!" 
+}
+
+# Correcto - En este caso, el POST se comporta como un PUT
+POST tutorial/helloworld/20
+{ 
+    "message": "Hello World from the cradle!" 
+}
+
+# Correcto - sobreescribimos el contenido del documento con ID 20
+POST tutorial/helloworld/20
+{ 
+    "message": "Hello World from the cradle!",
+    "internal" : {
+		"value" : 10,
+		"internal2" : {
+			"value" : 10
+		}
+	}
+}
+
+# Error - el documento ya existe y estamos forzando al POST a que haga un create
+POST tutorials/helloworlds/1/_create
+{
+    "message": "Hello World from the cradle!",
+		"internal" : {
+			"value" : 10,
+			"internal2" : {
+				"value" : 10
+		}
+	}
+}
+
+# Correcto - hace un upsert sobre el documento con ID igual a 2
+POST tutorial/helloworld/1/_update
+{
+    "doc": {
+		"message": "Hello World from the cradle!",
+			"internal" : {
+				"value" : 10,
+				"internal2" : {
+					"value" : 10
+			}
+		}
+	}
+}
+
+# Correcto
+POST tutorial/helloworld/9/_update
+{
+    "doc": {
+		"dato2":"dato"
+	},
+    "doc_as_upsert" : true
+}
+
+# Ejecuta un script sobre el campo tags agregando valor y nombre al contenido
+POST tutorial/helloworld/9/_update
+{
+    "script": "if (ctx._source.tags == null) { ctx._source.tags = [newtag] } else { ctx._source.tags.add(newtag) }",
+	"params": {
+		"newtag": {
+			"value": 7,
+			"nombre": "Juanito"
+		}
+	}
+}
+# Obtiene el documento con ID igual a 9 en el indice tutorial y el tipo helloworld
+GET tutorial/helloworld/9
+
+# Borra el documento en el índice tutorial, en el tipo helloworld con id igual a 2
+DELETE tutorial/helloworld/1
+
+# Error controlado, retorna un found igual a false notificando el no borrado
+DELETE tutorial/helloworld/3
+
+# Agregamos de nuevo el documento borrado
+POST tutorial/helloworld/1
+{ 
+    "message": "Hello World!" 
+}
+
+# Retorna únicamente el valor del contenido del documento, omitiendo el metadata
+GET tutorial/helloworld/1
+
+# Limita el contenido retornado al campo message
+GET tutorial/helloworld/1?fields=message
+

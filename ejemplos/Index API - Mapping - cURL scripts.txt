@@ -1,0 +1,44 @@
+# ¿Cómo podemos asociar un mapping a un índice?
+#  Opcion 1 - Durante el proceso de creación del índice - 
+curl -XDELETE "http://localhost:9200/indexname"
+curl -XPOST "http://localhost:9200/indexname " -d'
+{
+    "settings" : {},
+    "mappings" : {
+		"mappingName" : {
+			"properties" : {
+				"message" : {"type" : "string", "store" : true }
+			}
+		}
+	}
+}'
+curl -XGET "http://localhost:9200/indexname"
+	
+Opcion 2 - Creando mapping templates mediante el Mapping API -
+curl -XPUT "http://localhost:9200/indexname2"
+curl -XPUT "http://localhost:9200/indexname2/_mapping/mappingName" -d'
+{
+    "mappingName" : {
+		"properties" : {
+			"message":{
+				"type" : "string", "store" : true
+			}
+		}
+	}
+}'
+
+	
+curl -XPUT "http://localhost:9200/index-name-a"
+curl -XPUT "http://localhost:9200/index-name-b"
+curl -XPUT "http://localhost:9200/index-name-a,index-name-b/_mapping/mappingName" -d'
+{
+    "mappingName" : {
+		"properties" : {
+			"message" : {
+				"type" : "string", 
+				"store" : true 
+			}
+		}
+	}
+}'
+curl -XGET "http://localhost:9200/index-name-a/_mapping/mappingName"
